@@ -61,7 +61,7 @@ impl<'a> Interpreter<'a> {
                 Some('+') => {
                     self.advance();
                     let tok = Token {
-                        kind: TokenType::Plus,
+                        kind: TokenType::Add,
                         value: "+".to_string(),
                     };
                     return Some(tok);
@@ -70,8 +70,26 @@ impl<'a> Interpreter<'a> {
                 Some('-') => {
                     self.advance();
                     let tok = Token {
-                        kind: TokenType::Minus,
+                        kind: TokenType::Subtract,
                         value: "-".to_string(),
+                    };
+                    return Some(tok);
+                }
+
+                Some('*') => {
+                    self.advance();
+                    let tok = Token {
+                        kind: TokenType::Multiply,
+                        value: "*".to_string(),
+                    };
+                    return Some(tok);
+                }
+
+                Some('/') => {
+                    self.advance();
+                    let tok = Token {
+                        kind: TokenType::Divide,
+                        value: "/".to_string(),
                     };
                     return Some(tok);
                 }
@@ -101,19 +119,28 @@ impl<'a> Interpreter<'a> {
         self.eat(TokenType::Integer);
 
         let op = self.current_token.clone();
-        if op.clone().unwrap().kind == TokenType::Plus {
-            self.eat(TokenType::Plus);
+        let kind = op.clone().unwrap().kind;
+        if kind == TokenType::Add {
+            self.eat(TokenType::Add);
+        } else if kind == TokenType::Subtract {
+            self.eat(TokenType::Subtract);
+        } else if kind == TokenType::Multiply {
+            self.eat(TokenType::Multiply);
         } else {
-            self.eat(TokenType::Minus);
+            self.eat(TokenType::Divide);
         }
 
         let right = self.current_token.clone();
         self.eat(TokenType::Integer);
 
-        if op.unwrap().kind == TokenType::Plus {
+        if kind == TokenType::Add {
             left.unwrap().value.parse::<i32>().unwrap() + right.unwrap().value.parse::<i32>().unwrap()
-        } else {
+        } else if kind == TokenType::Subtract {
             left.unwrap().value.parse::<i32>().unwrap() - right.unwrap().value.parse::<i32>().unwrap()
+        } else if kind == TokenType::Multiply {
+            left.unwrap().value.parse::<i32>().unwrap() * right.unwrap().value.parse::<i32>().unwrap()
+        } else {
+            left.unwrap().value.parse::<i32>().unwrap() / right.unwrap().value.parse::<i32>().unwrap()
         }
     }
 
@@ -142,6 +169,15 @@ mod tests {
         let result = interpreter.expr();
 
         assert_eq!(result, 8);
+    }
+
+    #[test]
+    fn it_multiplies_digits() {
+        let string = String::from("2*3");
+        let mut interpreter = Interpreter::new(&string);
+        let result = interpreter.expr();
+
+        assert_eq!(result, 6);
     }
 
     #[test]
