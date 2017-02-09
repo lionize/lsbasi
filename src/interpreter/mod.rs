@@ -6,6 +6,9 @@ mod token;
 
 pub use self::token::{Token, TokenType};
 
+static OPERATORS: &'static [TokenType] =
+    &[TokenType::Add, TokenType::Subtract, TokenType::Multiply, TokenType::Divide];
+
 pub struct Interpreter<'a> {
     current_token: Option<Token>,
     current_char: Option<char>,
@@ -23,6 +26,7 @@ impl<'a> Interpreter<'a> {
         int
     }
 
+    /// Advances the iterator and sets the `current_char` variable.
     fn advance(&mut self) {
         self.current_char = self.input.next();
     }
@@ -33,6 +37,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
+    /// Returns a (multi-digit) integer consumed from the input.
     fn integer(&mut self) -> String {
         let mut result = String::from("");
         while self.current_char.is_some() && self.current_char.unwrap().is_digit(10) {
@@ -42,6 +47,10 @@ impl<'a> Interpreter<'a> {
         result
     }
 
+    /// Lexical analyzer (also known as scanner or tokenizer)
+    ///
+    /// This method is responsible for breaking a sentence
+    /// apart into tokens, one token at a time.
     fn get_next_token(&mut self) -> Option<Token> {
         while self.current_char.is_some() {
             match self.current_char {
@@ -98,11 +107,19 @@ impl<'a> Interpreter<'a> {
                     self.error();
                 }
             };
-        };
+        }
 
         Some(Token::eof())
     }
 
+    // #
+    // # Parser / Interpreter code
+    // #
+
+    /// compare the current token type with the passed token
+    /// type and if they match then "eat" the current token
+    /// and assign the next token to self.current_token,
+    /// otherwise raise an exception.
     fn eat(&mut self, t: TokenType) {
         let current_token = self.current_token.clone().unwrap();
         if current_token.kind == t {
@@ -112,36 +129,37 @@ impl<'a> Interpreter<'a> {
         }
     }
 
+    /// Returns an Integer token value.
+    fn term(&mut self) -> i32 {
+        let token = self.current_token.clone().unwrap();
+        self.eat(TokenType::Integer);
+        token.value.parse::<i32>().unwrap()
+    }
+
+    /// Arithmetic expression parser/interpreter.
     pub fn expr(&mut self) -> i32 {
         self.current_token = self.get_next_token();
 
-        let left = self.current_token.clone();
-        self.eat(TokenType::Integer);
+        let mut result = self.term();
+        while OPERATORS.iter().any(|t| *t == self.current_token.clone().unwrap().kind) {
+            let token = self.current_token.clone().unwrap();
+            match token.kind {
+                t @ TokenType::Add => {
+                    self.eat(t);
+                    result = result + self.term();
+                }
 
-        let op = self.current_token.clone();
-        let kind = op.clone().unwrap().kind;
-        if kind == TokenType::Add {
-            self.eat(TokenType::Add);
-        } else if kind == TokenType::Subtract {
-            self.eat(TokenType::Subtract);
-        } else if kind == TokenType::Multiply {
-            self.eat(TokenType::Multiply);
-        } else {
-            self.eat(TokenType::Divide);
+                t @ TokenType::Subtract => {
+                    self.eat(t);
+                    result = result - self.term();
+                }
+
+                _ => {
+                    break;
+                }
+            };
         }
-
-        let right = self.current_token.clone();
-        self.eat(TokenType::Integer);
-
-        if kind == TokenType::Add {
-            left.unwrap().value.parse::<i32>().unwrap() + right.unwrap().value.parse::<i32>().unwrap()
-        } else if kind == TokenType::Subtract {
-            left.unwrap().value.parse::<i32>().unwrap() - right.unwrap().value.parse::<i32>().unwrap()
-        } else if kind == TokenType::Multiply {
-            left.unwrap().value.parse::<i32>().unwrap() * right.unwrap().value.parse::<i32>().unwrap()
-        } else {
-            left.unwrap().value.parse::<i32>().unwrap() / right.unwrap().value.parse::<i32>().unwrap()
-        }
+        result
     }
 
     fn error(&self) -> ! {
@@ -171,14 +189,23 @@ mod tests {
         assert_eq!(result, 8);
     }
 
-    #[test]
-    fn it_multiplies_digits() {
-        let string = String::from("2*3");
-        let mut interpreter = Interpreter::new(&string);
-        let result = interpreter.expr();
+    //#[test]
+    //fn it_multiplies_digits() {
+    //let string = String::from("2*3");
+    //let mut interpreter = Interpreter::new(&string);
+    //let result = interpreter.expr();
 
-        assert_eq!(result, 6);
-    }
+    //assert_eq!(result, 6);
+    //}
+
+    //#[test]
+    //fn it_divides_digits() {
+    //let string = String::from("6/2");
+    //let mut interpreter = Interpreter::new(&string);
+    //let result = interpreter.expr();
+
+    //assert_eq!(result, 3);
+    //}
 
     #[test]
     fn it_handles_whitespace() {
