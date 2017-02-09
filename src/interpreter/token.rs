@@ -2,6 +2,7 @@
 pub enum TokenType {
     Integer,
     Plus,
+    Minus,
     EOF,
     Empty,
 }
