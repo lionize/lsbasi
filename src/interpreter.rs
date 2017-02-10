@@ -49,22 +49,32 @@ impl<'a> Interpreter<'a> {
 
     /// Arithmetic expression parser/interpreter.
     ///
-    /// expr   : factor ((MUL | DIV) factor)*
+    /// expr   : term ((PLUS|MINUS) term)*
+    /// term   : factor ((MUL | DIV) factor)*
     /// factor : INTEGER
     pub fn expr(&mut self) -> i32 {
         let mut result = self.factor();
-        let operators = &[TokenType::Multiply, TokenType::Divide];
-        while operators.iter().any(|t| *t == self.current_token.clone().unwrap().kind) {
+        while OPERATORS.iter().any(|t| *t == self.current_token.clone().unwrap().kind) {
             let token = self.current_token.clone().unwrap();
-            match token.kind {
+            result = match token.kind {
+                t @ TokenType::Add => {
+                    self.eat(t);
+                    result + self.factor()
+                }
+
+                t @ TokenType::Subtract => {
+                    self.eat(t);
+                    result - self.factor()
+                }
+
                 t @ TokenType::Multiply => {
                     self.eat(t);
-                    result = result * self.factor();
+                    result * self.factor()
                 }
 
                 t @ TokenType::Divide => {
                     self.eat(t);
-                    result = result / self.factor();
+                    result / self.factor()
                 }
 
                 _ => {
@@ -74,54 +84,4 @@ impl<'a> Interpreter<'a> {
         }
         result
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use interpreter::Interpreter;
-
-    //#[test]
-    //fn it_adds_digits() {
-    //let string = String::from("11+1");
-    //let mut interpreter = Interpreter::new(&string);
-    //let result = interpreter.expr();
-
-    //assert_eq!(result, 12);
-    //}
-
-    //#[test]
-    //fn it_subtracts_digits() {
-    //let string = String::from("10-2");
-    //let mut interpreter = Interpreter::new(&string);
-    //let result = interpreter.expr();
-
-    //assert_eq!(result, 8);
-    //}
-
-    //#[test]
-    //fn it_multiplies_digits() {
-    //let string = String::from("2*3");
-    //let mut interpreter = Interpreter::new(&string);
-    //let result = interpreter.expr();
-
-    //assert_eq!(result, 6);
-    //}
-
-    //#[test]
-    //fn it_divides_digits() {
-    //let string = String::from("6/2");
-    //let mut interpreter = Interpreter::new(&string);
-    //let result = interpreter.expr();
-
-    //assert_eq!(result, 3);
-    //}
-
-    //#[test]
-    //fn it_handles_whitespace() {
-    //let string = String::from("2   +    2");
-    //let mut interpreter = Interpreter::new(&string);
-    //let result = interpreter.expr();
-
-    //assert_eq!(result, 4);
-    //}
 }
