@@ -31,6 +31,27 @@ mod tests {
         assert_eq!(result, 2);
     }
 
+    #[test]
+    fn it_handles_complex_operations() {
+        let result = interpret(String::from("5 * 2 / 2 + 5 * 2"));
+        assert_eq!(result, 15);
+    }
+
+    #[test]
+    fn it_skips_whitespace() {
+        let result = interpret(String::from("5     +      6"));
+        assert_eq!(result, 11);
+    }
+
+    #[test]
+    fn it_handles_parens() {
+        let mut result = interpret(String::from("7 - (3 - 1)"));
+        assert_eq!(result, 5);
+
+        result = interpret(String::from("7 + (((3+2)))"));
+        assert_eq!(result, 12);
+    }
+
     fn interpret(string: String) -> i32 {
         let lexer = Lexer::new(&string);
         let mut int = Interpreter::new(lexer);

@@ -1,12 +1,13 @@
 #[derive(PartialEq, Debug, Clone)]
 pub enum TokenType {
     Integer,
+    LParen,
+    RParen,
     Add,
     Subtract,
     Multiply,
     Divide,
     EOF,
-    Empty,
 }
 
 #[derive(PartialEq, Debug, Clone)]

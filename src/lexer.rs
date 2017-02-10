@@ -49,60 +49,72 @@ impl<'a> Lexer<'a> {
     /// apart into tokens, one token at a time.
     pub fn get_next_token(&mut self) -> Option<Token> {
         while self.current_char.is_some() {
-            match self.current_char {
+            let tok = match self.current_char {
                 Some(' ') => {
                     self.skip_whitespace();
                     continue;
                 }
 
                 Some(c) if c.is_digit(10) => {
-                    let tok = Token {
+                    Token {
                         kind: TokenType::Integer,
                         value: self.integer(),
-                    };
-                    return Some(tok);
+                    }
+                }
+
+                Some('(') => {
+                    self.advance();
+                    Token {
+                        kind: TokenType::LParen,
+                        value: "(".to_string(),
+                    }
+                }
+
+                Some(')') => {
+                    self.advance();
+                    Token {
+                        kind: TokenType::RParen,
+                        value: ")".to_string(),
+                    }
                 }
 
                 Some('+') => {
                     self.advance();
-                    let tok = Token {
+                    Token {
                         kind: TokenType::Add,
                         value: "+".to_string(),
-                    };
-                    return Some(tok);
+                    }
                 }
 
                 Some('-') => {
                     self.advance();
-                    let tok = Token {
+                    Token {
                         kind: TokenType::Subtract,
                         value: "-".to_string(),
-                    };
-                    return Some(tok);
+                    }
                 }
 
                 Some('*') => {
                     self.advance();
-                    let tok = Token {
+                    Token {
                         kind: TokenType::Multiply,
                         value: "*".to_string(),
-                    };
-                    return Some(tok);
+                    }
                 }
 
                 Some('/') => {
                     self.advance();
-                    let tok = Token {
+                    Token {
                         kind: TokenType::Divide,
                         value: "/".to_string(),
-                    };
-                    return Some(tok);
+                    }
                 }
 
                 _ => {
                     self.error();
                 }
             };
+            return Some(tok);
         }
 
         Some(Token::eof())

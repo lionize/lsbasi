@@ -43,9 +43,17 @@ impl<'a> Interpreter<'a> {
 
     /// Returns an Integer token value.
     fn factor(&mut self) -> i32 {
-        let token = self.current_token.clone().unwrap();
-        self.eat(TokenType::Integer);
-        token.value.parse::<i32>().unwrap()
+        // factor : INTEGER | LPAREN expr RPAREN
+        let token = self.current_token();
+        if token.kind == TokenType::Integer {
+            self.eat(TokenType::Integer);
+            token.value.parse::<i32>().unwrap()
+        } else {
+            self.eat(TokenType::LParen);
+            let result = self.expr();
+            self.eat(TokenType::RParen);
+            result
+        }
     }
 
     fn term(&mut self) -> i32 {
@@ -78,7 +86,7 @@ impl<'a> Interpreter<'a> {
     ///
     /// expr   : term ((PLUS|MINUS) term)*
     /// term   : factor ((MUL | DIV) factor)*
-    /// factor : INTEGER
+    /// factor : INTEGER | LPAREN exp RPAREN
     pub fn expr(&mut self) -> i32 {
         let mut result = self.term();
 
