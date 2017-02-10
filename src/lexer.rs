@@ -3,7 +3,6 @@ use std::str;
 pub use token::{Token, TokenType};
 
 pub struct Lexer<'a> {
-    current_token: Option<Token>,
     current_char: Option<char>,
     input: str::Chars<'a>,
 }
@@ -11,7 +10,6 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a String) -> Lexer<'a> {
         let mut lex = Lexer {
-            current_token: None,
             current_char: None,
             input: input.chars(),
         };

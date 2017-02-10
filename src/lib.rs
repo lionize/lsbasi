@@ -21,23 +21,18 @@ mod tests {
 
     #[test]
     fn it_multiplies_digits() {
-        let string = String::from("2*3");
-        let mut lexer = Lexer::new(&string);
-        let mut int = Interpreter::new(lexer);
-        let result = int.expr();
-
+        let result = interpret(String::from("2*3"));
         assert_eq!(result, 6);
     }
 
     #[test]
     fn it_divides_digits() {
         let result = interpret(String::from("4/2"));
-
         assert_eq!(result, 2);
     }
 
     fn interpret(string: String) -> i32 {
-        let mut lexer = Lexer::new(&string);
+        let lexer = Lexer::new(&string);
         let mut int = Interpreter::new(lexer);
         int.expr()
     }

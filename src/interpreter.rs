@@ -1,9 +1,6 @@
 pub use token::{Token, TokenType};
 pub use lexer::Lexer;
 
-static OPERATORS: &'static [TokenType] =
-    &[TokenType::Add, TokenType::Subtract, TokenType::Multiply, TokenType::Divide];
-
 pub struct Interpreter<'a> {
     current_token: Option<Token>,
     lexer: Lexer<'a>,
@@ -17,6 +14,10 @@ impl<'a> Interpreter<'a> {
         };
         int.current_token = int.lexer.get_next_token();
         int
+    }
+
+    fn current_token(&self) -> Token {
+        self.current_token.clone().unwrap()
     }
 
     fn error(&self) -> ! {
@@ -47,26 +48,14 @@ impl<'a> Interpreter<'a> {
         token.value.parse::<i32>().unwrap()
     }
 
-    /// Arithmetic expression parser/interpreter.
-    ///
-    /// expr   : term ((PLUS|MINUS) term)*
-    /// term   : factor ((MUL | DIV) factor)*
-    /// factor : INTEGER
-    pub fn expr(&mut self) -> i32 {
+    fn term(&mut self) -> i32 {
+        // term : factor ((MUL | DIV) factor)*
         let mut result = self.factor();
-        while OPERATORS.iter().any(|t| *t == self.current_token.clone().unwrap().kind) {
-            let token = self.current_token.clone().unwrap();
+
+        let operators = &[TokenType::Multiply, TokenType::Divide];
+        while operators.iter().any(|t| *t == self.current_token().kind) {
+            let token = self.current_token();
             result = match token.kind {
-                t @ TokenType::Add => {
-                    self.eat(t);
-                    result + self.factor()
-                }
-
-                t @ TokenType::Subtract => {
-                    self.eat(t);
-                    result - self.factor()
-                }
-
                 t @ TokenType::Multiply => {
                     self.eat(t);
                     result * self.factor()
@@ -75,6 +64,36 @@ impl<'a> Interpreter<'a> {
                 t @ TokenType::Divide => {
                     self.eat(t);
                     result / self.factor()
+                }
+
+                _ => {
+                    break;
+                }
+            };
+        }
+        result
+    }
+
+    /// Arithmetic expression parser/interpreter.
+    ///
+    /// expr   : term ((PLUS|MINUS) term)*
+    /// term   : factor ((MUL | DIV) factor)*
+    /// factor : INTEGER
+    pub fn expr(&mut self) -> i32 {
+        let mut result = self.term();
+
+        let operators = &[TokenType::Add, TokenType::Subtract];
+        while operators.iter().any(|t| *t == self.current_token.clone().unwrap().kind) {
+            let token = self.current_token.clone().unwrap();
+            result = match token.kind {
+                t @ TokenType::Add => {
+                    self.eat(t);
+                    result + self.term()
+                }
+
+                t @ TokenType::Subtract => {
+                    self.eat(t);
+                    result - self.term()
                 }
 
                 _ => {
